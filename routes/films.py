@@ -8,6 +8,8 @@ films_bp = Blueprint("films", __name__)
 def get_films():
     title = request.args.get("title")
     topFive = request.args.get("topfive")
+    topFiveActors = request.args.get("topfiveActors")
+    actor = request.args.get("actor")
 
     db = get_db()
     cursor = db.cursor(dictionary=True)
@@ -32,12 +34,47 @@ def get_films():
                 LIMIT 5
             """)
 
+        elif topFiveActors == "1":
+            cursor.execute("""
+                select a.first_name, a.last_name, count(*) as movies_count from film f
+                join film_actor fa 
+                on f.film_id = fa.film_id 
+                join actor a 
+                on fa.actor_id = a.actor_id 
+                group by a.actor_id 
+                order by movies_count desc
+                limit 5
+            """)
+
+        elif actor:
+            actor = unquote(actor).strip()
+            parts = actor.split()
+            cursor.execute("""
+                SELECT
+                a.actor_id,
+                a.first_name,
+                a.last_name,
+                f.film_id,
+                f.title,
+                COUNT(r.rental_id) AS rented_count
+                FROM actor a
+                JOIN film_actor fa ON fa.actor_id = a.actor_id
+                JOIN film f        ON f.film_id = fa.film_id
+                JOIN inventory i   ON i.film_id = f.film_id
+                JOIN rental r      ON r.inventory_id = i.inventory_id
+                WHERE a.first_name = %s
+                AND a.last_name  = %s
+                GROUP BY a.actor_id, a.first_name, a.last_name, f.film_id, f.title
+                ORDER BY rented_count DESC
+                LIMIT 5;
+                """, (parts[0], parts[1]))
+
         else:
             cursor.execute("""
                 SELECT film_id, title, release_year
                 FROM film
                 LIMIT 20
-            """)
+            """,())
 
         films = cursor.fetchall()
         return jsonify(films)
