@@ -11,7 +11,7 @@ def get_customers():
     cursor.execute("""
         SELECT customer_id, first_name, last_name, email
         FROM customer
-        LIMIT 20
+        ORDER BY customer_id
     """)
 
     customers = cursor.fetchall()

@@ -71,9 +71,14 @@ def get_films():
 
         else:
             cursor.execute("""
-                SELECT film_id, title, release_year
-                FROM film
-                LIMIT 20
+                SELECT f.film_id, title, release_year, c.name as category
+                FROM film f
+                join film_category fc
+                on f.film_id = fc.film_id
+                join category c
+                on fc.category_id = c.category_id
+                order by f.film_id asc           
+               
             """,())
 
         films = cursor.fetchall()
@@ -153,14 +158,19 @@ def search_films():
     category = request.args.get("category", "").strip()
 
     query = """
-        SELECT DISTINCT f.film_id, f.title, f.description, f.release_year
-        FROM film f
-        LEFT JOIN film_actor fa ON f.film_id = fa.film_id
-        LEFT JOIN actor a ON fa.actor_id = a.actor_id
-        LEFT JOIN film_category fc ON f.film_id = fc.film_id
-        LEFT JOIN category c ON fc.category_id = c.category_id
-        WHERE 1=1
-    """
+    SELECT DISTINCT
+        f.film_id,
+        f.title,
+        f.description,
+        f.release_year,
+        c.name AS category
+    FROM film f
+    LEFT JOIN film_actor fa ON f.film_id = fa.film_id
+    LEFT JOIN actor a ON fa.actor_id = a.actor_id
+    LEFT JOIN film_category fc ON f.film_id = fc.film_id
+    LEFT JOIN category c ON fc.category_id = c.category_id
+    WHERE 1=1
+"""
     params = []
 
     if title:
