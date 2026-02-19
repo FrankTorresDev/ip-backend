@@ -97,8 +97,12 @@ def get_film_by_title(title):
 
     try:
         cursor.execute("""
-            SELECT film_id, title, description, release_year, rating, length
-            FROM film
+            SELECT f.film_id, f.title, f.description, f.release_year, f.rating, f.length, c.name as category
+            FROM film f
+            join film_category fc
+            on f.film_id = fc.film_id
+            join category c
+            on fc.category_id = c.category_id                  
             WHERE title = %s
             LIMIT 1
         """, (title,))
